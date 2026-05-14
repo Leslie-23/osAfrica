@@ -1,0 +1,37 @@
+#!/bin/bash
+# osAfrica post-install hook — runs inside the chroot during ISO build.
+# Sets up system configuration, creates service user, enables services.
+
+set -e
+
+echo "=== osAfrica chroot setup ==="
+
+# Create inference service user
+useradd --system --no-create-home --shell /usr/sbin/nologin osa-inference 2>/dev/null || true
+
+# Create directories
+mkdir -p /opt/osa/models
+mkdir -p /etc/osa/llama-swap
+mkdir -p /var/log/osa
+mkdir -p /run/osa
+
+# Set permissions
+chown osa-inference:osa-inference /opt/osa/models
+chmod 755 /var/log/osa
+chmod 755 /run/osa
+
+# Enable osAfrica services
+systemctl enable osa-inference.target 2>/dev/null || true
+systemctl enable osa-llama-swap.service 2>/dev/null || true
+systemctl enable osa-routerd.service 2>/dev/null || true
+
+# Set greetd as display manager
+systemctl enable greetd.service 2>/dev/null || true
+
+# Set Plymouth theme
+plymouth-set-default-theme osafrica 2>/dev/null || true
+
+# Set osa-shell as an available login shell
+echo "/usr/bin/osa-shell" >> /etc/shells 2>/dev/null || true
+
+echo "=== osAfrica chroot setup complete ==="

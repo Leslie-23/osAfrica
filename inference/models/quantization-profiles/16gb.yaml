@@ -1,0 +1,30 @@
+# 16GB RAM tier — primary target for osAfrica
+# Strategy: Llama 3 8B always loaded, Qwen Coder 14B on-demand (swap)
+
+general_model:
+  name: llama3-8b
+  quantization: Q4_K_M
+  file: llama-3-8b-instruct.Q4_K_M.gguf
+  ram_usage_mb: 5600
+  context_size: 4096
+  gpu_layers: 0  # CPU only on this tier
+  always_loaded: true
+
+code_model:
+  name: qwen-coder-14b
+  quantization: Q4_K_M
+  file: qwen-coder-14b-instruct.Q4_K_M.gguf
+  ram_usage_mb: 9500
+  context_size: 2048
+  gpu_layers: 0
+  always_loaded: false
+  ttl_seconds: 300  # unload after 5min idle
+
+memory_budget:
+  total_system_mb: 16384
+  os_reserved_mb: 2048
+  apps_reserved_mb: 1500
+  inference_budget_mb: 12836
+  note: "Only one model loaded at a time. Swap takes 2-5s on SSD."
+
+threads: 4  # conservative; auto-detect will override

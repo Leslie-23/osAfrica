@@ -1,0 +1,23 @@
+#!/bin/sh
+# osAfrica live-build configuration
+# Run this to configure the build, then run `lb build` to create the ISO.
+
+set -e
+
+lb config noauto \
+    --architectures amd64 \
+    --distribution trixie \
+    --archive-areas "main contrib non-free non-free-firmware" \
+    --binary-images iso-hybrid \
+    --bootloaders grub-efi \
+    --debian-installer none \
+    --firmware-binary true \
+    --firmware-chroot true \
+    --iso-application "osAfrica" \
+    --iso-publisher "osAfrica Project" \
+    --iso-volume "osAfrica 0.1.0" \
+    --memtest none \
+    --security true \
+    --updates true \
+    --apt-recommends false \
+    "${@}"

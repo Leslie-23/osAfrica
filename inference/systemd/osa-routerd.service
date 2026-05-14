@@ -1,0 +1,28 @@
+[Unit]
+Description=osAfrica AI Router Daemon
+After=osa-llama-swap.service
+Requires=osa-llama-swap.service
+PartOf=osa-inference.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/bin/osa-routerd
+Restart=on-failure
+RestartSec=3
+TimeoutStartSec=15
+
+RuntimeDirectory=osa
+RuntimeDirectoryMode=0755
+
+Environment=OSA_SOCKET_PATH=/run/osa/router.sock
+Environment=OSA_LLAMA_SWAP_URL=http://127.0.0.1:8080
+
+# Security
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=osa-inference.target

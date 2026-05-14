@@ -1,0 +1,37 @@
+# NVIDIA GPU tier — GPU-accelerated inference
+# Strategy: Offload model layers to GPU for dramatically faster inference
+
+general_model:
+  name: llama3-8b
+  quantization: Q4_K_M
+  file: llama-3-8b-instruct.Q4_K_M.gguf
+  ram_usage_mb: 5600
+  context_size: 4096
+  always_loaded: true
+  gpu_config:
+    # 8GB VRAM: all 33 layers on GPU (full offload)
+    # The 8B model fits entirely in 8GB VRAM
+    gpu_layers: 33
+    main_gpu: 0
+
+code_model:
+  name: qwen-coder-30b
+  quantization: Q4_K_M
+  file: qwen-coder-30b-instruct.Q4_K_M.gguf
+  ram_usage_mb: 19500
+  context_size: 4096
+  always_loaded: true
+  ttl_seconds: 0
+  gpu_config:
+    # VRAM-dependent layer offloading:
+    # 8GB VRAM:  0 layers (CPU only, GPU used by Llama 3)
+    # 12GB VRAM: 20 layers on GPU
+    # 16GB VRAM: 35 layers on GPU
+    # 24GB VRAM: 65 layers (full offload)
+    gpu_layers: auto  # osa-hwdetect calculates optimal value
+    main_gpu: 0
+
+memory_budget:
+  note: "GPU offloading reduces RAM pressure. Total depends on VRAM available."
+
+threads: 8

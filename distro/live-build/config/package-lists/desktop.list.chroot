@@ -1,0 +1,39 @@
+# osAfrica Desktop Packages
+
+# Wayland
+wayland-protocols
+libwayland-dev
+libwlroots-dev
+xwayland
+
+# Display & login
+greetd
+plymouth
+plymouth-themes
+
+# GTK/UI
+libgtk-4-dev
+libgtk4-layer-shell-dev
+fonts-noto
+fonts-noto-mono
+fonts-noto-color-emoji
+adwaita-icon-theme
+
+# Terminal
+foot
+
+# File manager
+thunar
+
+# Audio
+pipewire
+pipewire-pulse
+wireplumber
+
+# Media
+eog
+evince
+
+# Installer
+calamares
+calamares-settings-debian

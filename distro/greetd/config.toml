@@ -1,0 +1,10 @@
+[terminal]
+vt = 1
+
+[default_session]
+command = "osa-greeter"
+user = "greeter"
+
+[initial_session]
+command = "osa-compositor"
+user = "_active_user_"

@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=osAfrica
+Description=osAfrica boot splash theme
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/osafrica
+ScriptFile=/usr/share/plymouth/themes/osafrica/osafrica.script

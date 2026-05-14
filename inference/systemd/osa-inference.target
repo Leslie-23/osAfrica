@@ -1,0 +1,7 @@
+[Unit]
+Description=osAfrica AI Inference Services
+After=network.target
+Wants=osa-llama-swap.service
+
+[Install]
+WantedBy=multi-user.target

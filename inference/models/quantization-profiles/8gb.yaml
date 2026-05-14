@@ -1,0 +1,22 @@
+# 8GB RAM tier — minimum supported configuration
+# Strategy: Llama 3 8B only, no Qwen Coder (not enough RAM)
+
+general_model:
+  name: llama3-8b
+  quantization: Q4_K_S
+  file: llama-3-8b-instruct.Q4_K_S.gguf
+  ram_usage_mb: 5100
+  context_size: 2048  # reduced context to save memory
+  gpu_layers: 0
+  always_loaded: true
+
+code_model: null  # not available on 8GB systems
+
+memory_budget:
+  total_system_mb: 8192
+  os_reserved_mb: 1536
+  apps_reserved_mb: 1024
+  inference_budget_mb: 5632
+  note: "Code tasks routed to Llama 3 with code-focused system prompt."
+
+threads: 2

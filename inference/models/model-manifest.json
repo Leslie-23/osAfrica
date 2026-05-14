@@ -1,0 +1,87 @@
+{
+  "version": 1,
+  "models": {
+    "llama3-8b": {
+      "name": "Meta Llama 3 8B Instruct",
+      "role": "general",
+      "variants": {
+        "Q4_K_M": {
+          "filename": "llama-3-8b-instruct.Q4_K_M.gguf",
+          "url": "https://huggingface.co/bartowski/Meta-Llama-3-8B-Instruct-GGUF/resolve/main/Meta-Llama-3-8B-Instruct-Q4_K_M.gguf",
+          "size_gb": 4.9,
+          "ram_required_mb": 5600,
+          "sha256": "",
+          "tiers": ["16gb", "32gb", "gpu-nvidia"]
+        },
+        "Q4_K_S": {
+          "filename": "llama-3-8b-instruct.Q4_K_S.gguf",
+          "url": "https://huggingface.co/bartowski/Meta-Llama-3-8B-Instruct-GGUF/resolve/main/Meta-Llama-3-8B-Instruct-Q4_K_S.gguf",
+          "size_gb": 4.4,
+          "ram_required_mb": 5100,
+          "sha256": "",
+          "tiers": ["8gb"]
+        }
+      },
+      "license": "Meta Llama 3 Community License"
+    },
+    "qwen-coder-14b": {
+      "name": "Qwen Coder 14B Instruct",
+      "role": "code",
+      "variants": {
+        "Q4_K_M": {
+          "filename": "qwen-coder-14b-instruct.Q4_K_M.gguf",
+          "url": "",
+          "size_gb": 8.5,
+          "ram_required_mb": 9500,
+          "sha256": "",
+          "tiers": ["16gb"]
+        }
+      },
+      "license": "Apache 2.0",
+      "note": "Used on 16GB systems where 30B doesn't fit"
+    },
+    "qwen-coder-30b": {
+      "name": "Qwen Coder 30B Instruct",
+      "role": "code",
+      "variants": {
+        "Q4_K_M": {
+          "filename": "qwen-coder-30b-instruct.Q4_K_M.gguf",
+          "url": "",
+          "size_gb": 18.0,
+          "ram_required_mb": 19500,
+          "sha256": "",
+          "tiers": ["32gb", "gpu-nvidia"]
+        },
+        "Q3_K_M": {
+          "filename": "qwen-coder-30b-instruct.Q3_K_M.gguf",
+          "url": "",
+          "size_gb": 14.0,
+          "ram_required_mb": 15500,
+          "sha256": "",
+          "tiers": []
+        }
+      },
+      "license": "Apache 2.0",
+      "note": "Full code intelligence model, requires 32GB+ RAM"
+    }
+  },
+  "model_dir": "/opt/osa/models",
+  "tier_selection": {
+    "8gb": {
+      "general": "llama3-8b:Q4_K_S",
+      "code": null
+    },
+    "16gb": {
+      "general": "llama3-8b:Q4_K_M",
+      "code": "qwen-coder-14b:Q4_K_M"
+    },
+    "32gb": {
+      "general": "llama3-8b:Q4_K_M",
+      "code": "qwen-coder-30b:Q4_K_M"
+    },
+    "gpu-nvidia": {
+      "general": "llama3-8b:Q4_K_M",
+      "code": "qwen-coder-30b:Q4_K_M"
+    }
+  }
+}

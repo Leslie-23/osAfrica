@@ -1,0 +1,47 @@
+# llama-swap configuration for osAfrica
+# Manages model hot-swapping between Llama 3 8B and Qwen Coder
+# Docs: https://github.com/mostlygeek/llama-swap
+
+listen: "127.0.0.1:8080"
+log_level: "info"
+
+# Health check endpoint
+healthcheck:
+  endpoint: "/health"
+
+# Model groups — llama-swap manages loading/unloading
+models:
+  llama3-8b:
+    cmd: >-
+      llama-server
+      --model /opt/osa/models/llama-3-8b-instruct.Q4_K_M.gguf
+      --host 127.0.0.1
+      --port 8081
+      --ctx-size 4096
+      --threads ${OSA_THREADS:-4}
+      --flash-attn
+      --chat-template llama3
+    proxy: "http://127.0.0.1:8081"
+    ttl: 0  # never auto-unload (primary model)
+    aliases:
+      - "llama3"
+      - "general"
+
+  qwen-coder:
+    cmd: >-
+      llama-server
+      --model /opt/osa/models/qwen-coder.gguf
+      --host 127.0.0.1
+      --port 8082
+      --ctx-size 2048
+      --threads ${OSA_THREADS:-4}
+      --flash-attn
+    proxy: "http://127.0.0.1:8082"
+    ttl: 300  # unload after 5 minutes idle (saves RAM)
+    aliases:
+      - "qwen"
+      - "code"
+
+# On 16GB systems, only one model loaded at a time (swap mode)
+# On 32GB+ systems, both can be loaded concurrently
+# This is handled automatically by llama-swap based on available memory

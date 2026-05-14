@@ -1,0 +1,14 @@
+cmake_minimum_required(VERSION 3.20)
+project(osa-hwdetect VERSION 0.1.0 LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+add_executable(osa-hwdetect
+    src/main.cpp
+    src/gpu_detect.cpp
+    src/ram_detect.cpp
+    src/profile_select.cpp
+)
+
+install(TARGETS osa-hwdetect DESTINATION bin)

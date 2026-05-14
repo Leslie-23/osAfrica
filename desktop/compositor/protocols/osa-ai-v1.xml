@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<protocol name="osa_ai_v1">
+  <copyright>
+    Copyright (C) osAfrica Project
+    SPDX-License-Identifier: GPL-3.0-or-later
+  </copyright>
+
+  <description summary="osAfrica AI panel protocol">
+    This protocol allows the AI command palette and other AI-aware
+    applications to communicate with the osa-compositor.
+
+    It provides events for AI panel visibility, model status,
+    and inference progress, allowing applications to react to
+    the AI state of the desktop.
+  </description>
+
+  <interface name="osa_ai_manager_v1" version="1">
+    <description summary="AI panel manager">
+      Global singleton for managing the AI overlay panel.
+      Obtained via wl_registry.
+    </description>
+
+    <request name="toggle_panel">
+      <description summary="Toggle AI panel visibility">
+        Toggle the AI command palette overlay on/off.
+      </description>
+    </request>
+
+    <request name="submit_query">
+      <description summary="Submit a query to the AI">
+        Send a natural language query to the AI router.
+      </description>
+      <arg name="text" type="string" summary="Query text"/>
+      <arg name="model_hint" type="string" summary="Model hint: auto, general, code"/>
+    </request>
+
+    <request name="get_status">
+      <description summary="Request current AI status">
+        Request the current AI system status (model loaded, inference state).
+      </description>
+    </request>
+
+    <event name="panel_state">
+      <description summary="AI panel visibility changed">
+        Sent when the AI panel is shown or hidden.
+      </description>
+      <arg name="visible" type="uint" summary="1 if visible, 0 if hidden"/>
+    </event>
+
+    <event name="model_status">
+      <description summary="AI model status update">
+        Sent when the active model changes or inference state changes.
+      </description>
+      <arg name="model_name" type="string" summary="Currently active model"/>
+      <arg name="state" type="uint" enum="inference_state" summary="Current state"/>
+    </event>
+
+    <event name="response_chunk">
+      <description summary="Streaming AI response chunk">
+        Sent during streaming inference with partial response text.
+      </description>
+      <arg name="text" type="string" summary="Response text chunk"/>
+      <arg name="done" type="uint" summary="1 if response is complete"/>
+    </event>
+
+    <enum name="inference_state">
+      <entry name="idle" value="0" summary="No inference running"/>
+      <entry name="loading" value="1" summary="Model is loading"/>
+      <entry name="thinking" value="2" summary="Inference in progress"/>
+      <entry name="streaming" value="3" summary="Streaming response"/>
+      <entry name="error" value="4" summary="Inference error"/>
+    </enum>
+  </interface>
+</protocol>

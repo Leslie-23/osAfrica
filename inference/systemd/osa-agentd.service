@@ -1,0 +1,20 @@
+[Unit]
+Description=osAfrica System Agent Supervisor
+After=osa-routerd.service
+Requires=osa-routerd.service
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/bin/python3 -m osa_core.agents
+Restart=on-failure
+RestartSec=10
+
+Environment=OSA_SOCKET_PATH=/run/osa/router.sock
+
+NoNewPrivileges=yes
+ProtectHome=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

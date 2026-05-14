@@ -1,0 +1,58 @@
+# osAfrica Base System Packages
+
+# Core system
+systemd
+dbus
+udev
+sudo
+locales
+console-setup
+keyboard-configuration
+
+# Networking
+network-manager
+wpasupplicant
+iproute2
+iputils-ping
+curl
+wget
+openssh-client
+ca-certificates
+
+# Filesystem
+btrfs-progs
+dosfstools
+ntfs-3g
+parted
+gdisk
+
+# Hardware
+firmware-linux
+pciutils
+usbutils
+lshw
+dmidecode
+
+# Shell & tools
+bash
+bash-completion
+zsh
+nano
+vim-tiny
+less
+tree
+htop
+tmux
+git
+
+# System management
+apt-transport-https
+gnupg2
+rsync
+cron
+logrotate
+
+# Security
+bubblewrap
+apparmor
+ufw

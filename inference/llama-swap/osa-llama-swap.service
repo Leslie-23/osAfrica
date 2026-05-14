@@ -1,0 +1,30 @@
+[Unit]
+Description=osAfrica llama-swap Model Proxy
+After=network.target osa-hwdetect.service
+Wants=osa-hwdetect.service
+PartOf=osa-inference.target
+
+[Service]
+Type=simple
+User=osa-inference
+Group=osa-inference
+ExecStart=/usr/local/bin/llama-swap --config /etc/osa/llama-swap/config.yaml
+Restart=on-failure
+RestartSec=5
+TimeoutStartSec=30
+
+# Security hardening
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadOnlyPaths=/opt/osa/models
+PrivateTmp=yes
+
+# Resource limits
+LimitNOFILE=65536
+MemoryMax=90%
+
+Environment=OSA_THREADS=4
+
+[Install]
+WantedBy=osa-inference.target

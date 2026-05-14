@@ -1,0 +1,27 @@
+componentName: osafrica
+
+strings:
+    productName:         osAfrica
+    shortProductName:    osAfrica
+    version:             0.1.0
+    shortVersion:        0.1
+    versionedName:       osAfrica 0.1.0
+    shortVersionedName:  osAfrica 0.1
+    bootloaderEntryName: osAfrica
+    productUrl:          https://github.com/Leslie-23/osAfrica
+    supportUrl:          https://github.com/Leslie-23/osAfrica/issues
+    knownIssuesUrl:      https://github.com/Leslie-23/osAfrica/issues
+    releaseNotesUrl:     https://github.com/Leslie-23/osAfrica/releases
+
+images:
+    productLogo:         "logo.png"
+    productIcon:         "logo.png"
+    productWelcome:      "welcome.png"
+
+slideshow: "show.qml"
+
+style:
+    sidebarBackground:   "#0d1117"
+    sidebarText:         "#c9d1d9"
+    sidebarTextSelect:   "#58a6ff"
+    sidebarTextHighlight: "#00cc66"

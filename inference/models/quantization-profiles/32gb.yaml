@@ -1,0 +1,30 @@
+# 32GB+ RAM tier — optimal configuration
+# Strategy: Both models loaded concurrently, instant routing
+
+general_model:
+  name: llama3-8b
+  quantization: Q4_K_M
+  file: llama-3-8b-instruct.Q4_K_M.gguf
+  ram_usage_mb: 5600
+  context_size: 4096
+  gpu_layers: 0
+  always_loaded: true
+
+code_model:
+  name: qwen-coder-30b
+  quantization: Q4_K_M
+  file: qwen-coder-30b-instruct.Q4_K_M.gguf
+  ram_usage_mb: 19500
+  context_size: 4096
+  gpu_layers: 0
+  always_loaded: true  # both models concurrent
+  ttl_seconds: 0
+
+memory_budget:
+  total_system_mb: 32768
+  os_reserved_mb: 2048
+  apps_reserved_mb: 3000
+  inference_budget_mb: 27720
+  note: "Both models loaded simultaneously. No swap latency."
+
+threads: 8
