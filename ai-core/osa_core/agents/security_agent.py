@@ -13,8 +13,8 @@ class SecurityAgent(SystemAgent):
     name = "security"
     interval_seconds = 300
 
-    def __init__(self, router_client):
-        super().__init__(router_client)
+    def __init__(self, router_client=None, dispatcher=None):
+        super().__init__(router_client=router_client, dispatcher=dispatcher)
         self._last_check = datetime.now()
 
     async def collect_data(self) -> dict:

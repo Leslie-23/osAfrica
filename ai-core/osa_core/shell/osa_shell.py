@@ -22,6 +22,8 @@ from prompt_toolkit.styles import Style
 from osa_core.common.ipc import IPCClient, Request
 from osa_core.common.permissions import CommandPolicy, CommandVerdict, SafetyLevel
 from osa_core.router.classifier import Intent, classify
+from osa_core.router.config import RouterConfig
+from osa_core.router.dispatch import Dispatcher
 
 SHELL_STYLE = Style.from_dict({
     "prompt": "#00cc66 bold",
@@ -60,6 +62,8 @@ class OsaShell:
     def __init__(self, router_socket: Path | None = None):
         self.socket_path = router_socket or Path("/run/osa/router.sock")
         self.client: IPCClient | None = None
+        self.dispatcher: Dispatcher | None = None
+        self.direct_mode = False
         self.context_id = str(uuid.uuid4())
         self.policy = CommandPolicy(SafetyLevel.NORMAL)
         self.bash_mode = False
@@ -141,59 +145,83 @@ class OsaShell:
         except (EOFError, KeyboardInterrupt):
             return False
 
+    async def _init_direct_mode(self):
+        llama_url = os.environ.get("OSA_LLAMA_SWAP_URL", "http://127.0.0.1:8080")
+        config = RouterConfig(llama_swap_url=llama_url)
+        self.dispatcher = Dispatcher(config)
+        healthy = await self.dispatcher.health_check()
+        if not healthy:
+            print(f"\033[31mError: Cannot reach inference server at {llama_url}\033[0m")
+            print("  Start llama-server first.")
+            self.dispatcher = None
+            return False
+        self.direct_mode = True
+        return True
+
     async def _query_ai(self, text: str):
-        if not self.client:
-            connected = await self.connect()
-            if not connected:
-                print("\033[31mError: Cannot connect to osa-routerd.\033[0m")
-                print(f"  Is the router daemon running? Socket: {self.socket_path}")
-                print("  Start it with: osa-routerd")
-                return
-
-        request = Request(
-            text=text,
-            model_hint="auto",
-            stream=True,
-            context_id=self.context_id,
-        )
-
         classification = classify(text)
         model_tag = "qwen" if classification.intent == Intent.CODE else "llama3"
         print(f"\033[90m[{model_tag}]\033[0m ", end="", flush=True)
 
-        try:
-            full_response = ""
-            async for response in self.client.send(request):
-                if response.error:
-                    print(f"\n\033[31mError: {response.error}\033[0m")
+        if self.direct_mode or not self.client:
+            if not self.dispatcher:
+                ready = await self._init_direct_mode()
+                if not ready:
                     return
-                print(response.text, end="", flush=True)
-                full_response += response.text
-            print()
+            try:
+                full_response = ""
+                async for chunk in self.dispatcher.stream(
+                    text=text,
+                    model=classification.model_hint,
+                    intent_type=classification.intent.value,
+                ):
+                    print(chunk, end="", flush=True)
+                    full_response += chunk
+                print()
+            except Exception as e:
+                print(f"\n\033[31mError: {e}\033[0m")
+                return
+        else:
+            request = Request(
+                text=text,
+                model_hint="auto",
+                stream=True,
+                context_id=self.context_id,
+            )
+            try:
+                full_response = ""
+                async for response in self.client.send(request):
+                    if response.error:
+                        print(f"\n\033[31mError: {response.error}\033[0m")
+                        return
+                    print(response.text, end="", flush=True)
+                    full_response += response.text
+                print()
+            except (ConnectionResetError, BrokenPipeError):
+                print("\n\033[31mConnection to router lost. Reconnecting...\033[0m")
+                self.client = None
+                return
 
-            if classification.intent == Intent.COMMAND and full_response.strip():
-                command = full_response.strip().strip("`").strip()
-                if command.startswith("```"):
-                    command = command.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
-                policy_result = self.policy.evaluate(command)
-                if policy_result.verdict == CommandVerdict.BLOCK:
-                    print(f"\033[31mBlocked: {policy_result.reason}\033[0m")
-                elif policy_result.verdict == CommandVerdict.ALLOW:
-                    self._run_bash(command)
-                elif self._confirm_command(command):
-                    self._run_bash(command)
-
-        except (ConnectionResetError, BrokenPipeError):
-            print("\n\033[31mConnection to router lost. Reconnecting...\033[0m")
-            self.client = None
+        if classification.intent == Intent.COMMAND and full_response.strip():
+            command = full_response.strip().strip("`").strip()
+            if command.startswith("```"):
+                command = command.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
+            policy_result = self.policy.evaluate(command)
+            if policy_result.verdict == CommandVerdict.BLOCK:
+                print(f"\033[31mBlocked: {policy_result.reason}\033[0m")
+            elif policy_result.verdict == CommandVerdict.ALLOW:
+                self._run_bash(command)
+            elif self._confirm_command(command):
+                self._run_bash(command)
 
     async def run(self):
         print(BANNER)
 
         connected = await self.connect()
         if not connected:
-            print(f"\033[33mWarning: Router not available at {self.socket_path}\033[0m")
-            print("Running in offline mode. Start osa-routerd for AI features.\n")
+            self.direct_mode = True
+            llama_url = os.environ.get("OSA_LLAMA_SWAP_URL", "http://127.0.0.1:8080")
+            print(f"\033[33mRouter not available. Using direct mode → {llama_url}\033[0m\n")
 
         try:
             self.policy.load_custom_policy()
@@ -235,6 +263,8 @@ class OsaShell:
 
         if self.client:
             await self.client.close()
+        if self.dispatcher:
+            await self.dispatcher.close()
 
     @staticmethod
     def _looks_like_bash(text: str) -> bool:

@@ -1,0 +1,14 @@
+[Unit]
+Description=osAfrica AI System Agents
+After=osa-routerd.service
+Wants=osa-routerd.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/osa-agentd
+Restart=on-failure
+RestartSec=10
+Environment=OSA_LLAMA_SWAP_URL=http://127.0.0.1:8080
+
+[Install]
+WantedBy=default.target

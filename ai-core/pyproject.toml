@@ -29,6 +29,8 @@ dev = [
 [project.scripts]
 osa-shell = "osa_core.shell.osa_shell:main"
 osa-routerd = "osa_core.router.router_daemon:main"
+osa-agentd = "osa_core.agents.__main__:main"
+osa-setup = "osa_core.setup.first_run:main"
 
 [tool.setuptools.packages.find]
 include = ["osa_core*"]

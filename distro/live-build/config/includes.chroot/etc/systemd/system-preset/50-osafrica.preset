@@ -1,0 +1,7 @@
+enable osa-inference.target
+enable osa-llama-swap.service
+enable osa-routerd.service
+enable greetd.service
+disable gdm.service
+disable sddm.service
+disable lightdm.service

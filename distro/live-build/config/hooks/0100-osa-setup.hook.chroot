@@ -6,32 +6,96 @@ set -e
 
 echo "=== osAfrica chroot setup ==="
 
-# Create inference service user
+# --- Users & groups ---
 useradd --system --no-create-home --shell /usr/sbin/nologin osa-inference 2>/dev/null || true
+groupadd --system osa-ai 2>/dev/null || true
 
-# Create directories
+# --- Directories ---
 mkdir -p /opt/osa/models
 mkdir -p /etc/osa/llama-swap
 mkdir -p /var/log/osa
 mkdir -p /run/osa
 
-# Set permissions
 chown osa-inference:osa-inference /opt/osa/models
 chmod 755 /var/log/osa
-chmod 755 /run/osa
+chmod 1777 /run/osa
 
-# Enable osAfrica services
+# --- Install Python packages ---
+if [ -d /opt/osa-core ]; then
+    python3 -m venv /opt/osa/venv
+    /opt/osa/venv/bin/pip install -e /opt/osa-core 2>/dev/null || true
+fi
+
+# --- Symlink binaries ---
+for bin in osa-shell osa-routerd osa-agentd osa-setup; do
+    if [ -f "/opt/osa/venv/bin/$bin" ]; then
+        ln -sf "/opt/osa/venv/bin/$bin" "/usr/bin/$bin"
+    fi
+done
+
+# --- Enable services ---
 systemctl enable osa-inference.target 2>/dev/null || true
 systemctl enable osa-llama-swap.service 2>/dev/null || true
 systemctl enable osa-routerd.service 2>/dev/null || true
-
-# Set greetd as display manager
 systemctl enable greetd.service 2>/dev/null || true
 
-# Set Plymouth theme
+# --- Disable competing display managers ---
+for dm in gdm sddm lightdm; do
+    systemctl disable "${dm}.service" 2>/dev/null || true
+done
+
+# --- Plymouth theme ---
 plymouth-set-default-theme osafrica 2>/dev/null || true
 
-# Set osa-shell as an available login shell
-echo "/usr/bin/osa-shell" >> /etc/shells 2>/dev/null || true
+# --- GRUB theme ---
+if [ -d /boot/grub/themes ]; then
+    mkdir -p /boot/grub/themes/osafrica
+    cp /usr/share/osa/grub-theme/* /boot/grub/themes/osafrica/ 2>/dev/null || true
+fi
+
+# --- Register osa-shell as login shell ---
+grep -qxF '/usr/bin/osa-shell' /etc/shells 2>/dev/null || \
+    echo '/usr/bin/osa-shell' >> /etc/shells
+
+# --- Wayland session ---
+mkdir -p /usr/share/wayland-sessions
+if [ -f /usr/share/osa/session/osafrica.desktop ]; then
+    cp /usr/share/osa/session/osafrica.desktop /usr/share/wayland-sessions/
+fi
+
+# --- Session wrapper ---
+if [ -f /usr/share/osa/session/osa-session ]; then
+    install -m 755 /usr/share/osa/session/osa-session /usr/bin/osa-session
+fi
+
+# --- Skeleton user config ---
+if [ -d /usr/share/osa/skel ]; then
+    cp -r /usr/share/osa/skel/. /etc/skel/
+fi
+
+# --- First-run trigger ---
+mkdir -p /etc/xdg/autostart
+cat > /etc/xdg/autostart/osa-first-run.desktop <<'DESKTOP'
+[Desktop Entry]
+Type=Application
+Name=osAfrica First Run Setup
+Exec=/usr/bin/osa-setup
+Terminal=true
+X-GNOME-Autostart-Phase=Application
+X-osAfrica-RunOnce=true
+DESKTOP
+
+# --- Logrotate ---
+cat > /etc/logrotate.d/osafrica <<'LOGROTATE'
+/var/log/osa/*.log {
+    daily
+    rotate 7
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 0644 root root
+}
+LOGROTATE
 
 echo "=== osAfrica chroot setup complete ==="

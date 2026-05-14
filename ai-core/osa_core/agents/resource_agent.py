@@ -12,8 +12,8 @@ class ResourceAgent(SystemAgent):
     name = "resource"
     interval_seconds = 120
 
-    def __init__(self, router_client, thresholds: dict | None = None):
-        super().__init__(router_client)
+    def __init__(self, router_client=None, dispatcher=None, thresholds: dict | None = None):
+        super().__init__(router_client=router_client, dispatcher=dispatcher)
         self.thresholds = thresholds or {
             "ram_percent_warn": 85,
             "ram_percent_critical": 95,

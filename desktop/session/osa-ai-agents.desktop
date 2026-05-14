@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=osAfrica AI Agents
+Comment=System monitoring agents (resource, security, self-heal)
+Exec=/usr/bin/osa-agentd
+Hidden=false
+X-GNOME-Autostart-enabled=true
+X-osAfrica-Component=true

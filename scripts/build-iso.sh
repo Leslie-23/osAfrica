@@ -50,23 +50,57 @@ mkdir -p "$OVERLAY/usr/local/bin"
 mkdir -p "$OVERLAY/etc/osa"
 mkdir -p "$OVERLAY/etc/systemd/system"
 mkdir -p "$OVERLAY/opt/osa/models"
+mkdir -p "$OVERLAY/opt/osa-core"
+mkdir -p "$OVERLAY/usr/share/osa/session"
+mkdir -p "$OVERLAY/usr/share/osa/skel"
+mkdir -p "$OVERLAY/usr/share/osa/grub-theme"
+mkdir -p "$OVERLAY/usr/share/wayland-sessions"
+mkdir -p "$OVERLAY/etc/greetd"
+
+# Copy AI core source for in-chroot install
+cp -r "$REPO_ROOT/ai-core/"* "$OVERLAY/opt/osa-core/"
 
 # Copy systemd units
-cp "$REPO_ROOT/inference/llama-swap/osa-llama-swap.service" "$OVERLAY/etc/systemd/system/"
-cp "$REPO_ROOT/inference/systemd/osa-routerd.service" "$OVERLAY/etc/systemd/system/"
-cp "$REPO_ROOT/inference/systemd/osa-agentd.service" "$OVERLAY/etc/systemd/system/"
-cp "$REPO_ROOT/inference/systemd/osa-inference.target" "$OVERLAY/etc/systemd/system/"
+for unit in "$REPO_ROOT"/inference/systemd/*.service "$REPO_ROOT"/inference/systemd/*.target; do
+    [ -f "$unit" ] && cp "$unit" "$OVERLAY/etc/systemd/system/"
+done
 
 # Copy llama-swap config
 mkdir -p "$OVERLAY/etc/osa/llama-swap"
 cp "$REPO_ROOT/inference/llama-swap/config.yaml" "$OVERLAY/etc/osa/llama-swap/"
 
 # Copy C++ binaries if built
-for bin in osa-hwdetect osa-sandbox; do
+for bin in osa-hwdetect osa-sandbox osa-updater; do
     if [ -f "$REPO_ROOT/system/$bin/build/$bin" ]; then
         cp "$REPO_ROOT/system/$bin/build/$bin" "$OVERLAY/usr/local/bin/"
     fi
 done
+
+# Copy desktop session files
+cp "$REPO_ROOT/desktop/session/osafrica.desktop" "$OVERLAY/usr/share/wayland-sessions/"
+cp "$REPO_ROOT/desktop/session/osa-session" "$OVERLAY/usr/share/osa/session/"
+cp "$REPO_ROOT/desktop/session/osa-ai-agents.desktop" "$OVERLAY/usr/share/osa/session/"
+
+# Copy GRUB theme
+cp "$REPO_ROOT/distro/grub/theme/"* "$OVERLAY/usr/share/osa/grub-theme/" 2>/dev/null || true
+
+# Copy greetd config
+cp "$REPO_ROOT/distro/greetd/config.toml" "$OVERLAY/etc/greetd/"
+cp -r "$REPO_ROOT/distro/greetd/osa-greeter" "$OVERLAY/usr/share/osa/"
+
+# Copy skeleton user config
+cp -r "$REPO_ROOT/distro/skel/." "$OVERLAY/usr/share/osa/skel/"
+
+# Copy Plymouth theme
+mkdir -p "$OVERLAY/usr/share/plymouth/themes/osafrica"
+cp "$REPO_ROOT/distro/plymouth/themes/osafrica/"* "$OVERLAY/usr/share/plymouth/themes/osafrica/" 2>/dev/null || true
+
+# Copy Calamares branding
+if [ -d "$REPO_ROOT/distro/calamares" ]; then
+    mkdir -p "$OVERLAY/etc/calamares"
+    cp "$REPO_ROOT/distro/calamares/settings.conf" "$OVERLAY/etc/calamares/"
+    cp -r "$REPO_ROOT/distro/calamares/branding" "$OVERLAY/etc/calamares/" 2>/dev/null || true
+fi
 
 # Build the ISO
 echo "[4/4] Building ISO..."

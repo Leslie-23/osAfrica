@@ -1,0 +1,15 @@
+# osAfrica user configuration
+safety_level: normal
+theme: dark
+ai_panel_shortcut: Super+Space
+terminal_shortcut: Super+Return
+
+shell:
+  show_model_tag: true
+  confirm_commands: true
+  history_size: 10000
+
+inference:
+  max_tokens: 4096
+  temperature: 0.7
+  code_temperature: 0.3

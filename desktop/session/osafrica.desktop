@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=osAfrica
+Comment=AI-Native Linux Desktop
+Exec=/usr/bin/osa-session
+Type=Application
+DesktopNames=osAfrica

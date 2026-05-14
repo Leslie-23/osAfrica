@@ -6,16 +6,20 @@ import asyncio
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
+from typing import TYPE_CHECKING
 
-from osa_core.common.ipc import IPCClient, Request
+if TYPE_CHECKING:
+    from osa_core.common.ipc import IPCClient
+    from osa_core.router.dispatch import Dispatcher
 
 
 class SystemAgent(ABC):
     name: str = "base"
     interval_seconds: int = 60
 
-    def __init__(self, router_client: IPCClient):
+    def __init__(self, router_client: IPCClient | None = None, dispatcher: Dispatcher | None = None):
         self.router = router_client
+        self.dispatcher = dispatcher
         self.logger = logging.getLogger(f"osa-agent.{self.name}")
         self._running = False
         self._last_run: datetime | None = None
@@ -33,6 +37,15 @@ class SystemAgent(ABC):
     async def act(self, llm_response: str, data: dict):
         """Take action based on LLM analysis."""
 
+    async def _query_llm(self, prompt: str) -> str:
+        if self.dispatcher:
+            return await self.dispatcher.complete(
+                text=prompt, model="llama3-8b", intent_type="general",
+            )
+        if self.router:
+            return await self.router.query(prompt, model_hint="general")
+        raise RuntimeError("No router or dispatcher configured")
+
     async def run_cycle(self):
         try:
             data = await self.collect_data()
@@ -41,7 +54,7 @@ class SystemAgent(ABC):
                 return
 
             prompt = self.build_prompt(data)
-            response = await self.router.query(prompt, model_hint="general")
+            response = await self._query_llm(prompt)
             await self.act(response, data)
             self._consecutive_errors = 0
             self._last_run = datetime.now()

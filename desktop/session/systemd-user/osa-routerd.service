@@ -1,0 +1,13 @@
+[Unit]
+Description=osAfrica AI Router Daemon (user session)
+After=osa-inference.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/osa-routerd
+Restart=on-failure
+RestartSec=5
+Environment=OSA_LLAMA_SWAP_URL=http://127.0.0.1:8080
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,26 @@
+#!/bin/sh
+# osAfrica session wrapper — launched by greetd/login manager.
+# Starts inference services, compositor, and AI agents.
+
+export XDG_SESSION_TYPE=wayland
+export XDG_CURRENT_DESKTOP=osAfrica
+export XDG_SESSION_DESKTOP=osAfrica
+export MOZ_ENABLE_WAYLAND=1
+export QT_QPA_PLATFORM=wayland
+export SDL_VIDEODRIVER=wayland
+export _JAVA_AWT_WM_NONREPARENTING=1
+
+# Ensure runtime dir exists
+if [ -z "$XDG_RUNTIME_DIR" ]; then
+    export XDG_RUNTIME_DIR="/run/user/$(id -u)"
+    mkdir -p "$XDG_RUNTIME_DIR"
+    chmod 0700 "$XDG_RUNTIME_DIR"
+fi
+
+# Start AI inference (systemd handles this if available)
+if command -v systemctl >/dev/null 2>&1; then
+    systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP 2>/dev/null
+fi
+
+# Launch compositor (it spawns the panel internally)
+exec osa-compositor
