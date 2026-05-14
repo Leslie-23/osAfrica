@@ -25,23 +25,39 @@ class Classification:
     reason: str
 
 
-CODE_KEYWORDS = frozenset({
-    "code", "script", "function", "debug", "compile", "refactor", "review",
-    "implement", "algorithm", "class", "method", "variable", "loop",
-    "recursion", "api", "endpoint", "unittest", "test case", "regex",
-    "parse", "serialize", "deserialize", "optimize this code",
-    "write a program", "fix this code", "explain this code",
-    "generate a script", "code review", "pull request",
+CODE_KEYWORDS_PHRASE = frozenset({
+    "optimize this code", "write a program", "fix this code",
+    "explain this code", "generate a script", "code review", "pull request",
+    "test case",
 })
 
-COMMAND_KEYWORDS = frozenset({
-    "list files", "show files", "find files", "delete", "remove", "move",
-    "copy", "rename", "install", "uninstall", "update", "upgrade",
-    "start service", "stop service", "restart", "reboot", "shutdown",
-    "disk space", "memory usage", "running processes", "kill process",
-    "network", "wifi", "bluetooth", "mount", "unmount", "permissions",
-    "open", "close", "search for", "compress", "extract", "download",
+CODE_KEYWORDS_WORD = frozenset({
+    "code", "script", "function", "debug", "compile", "refactor", "review",
+    "implement", "algorithm", "class", "method", "variable", "loop",
+    "recursion", "api", "endpoint", "unittest", "regex",
+    "parse", "serialize", "deserialize",
 })
+
+COMMAND_KEYWORDS_PHRASE = frozenset({
+    "list files", "show files", "find files", "start service",
+    "stop service", "disk space", "memory usage", "running processes",
+    "kill process", "search for",
+})
+
+COMMAND_KEYWORDS_WORD = frozenset({
+    "delete", "remove", "move", "copy", "rename", "install", "uninstall",
+    "update", "upgrade", "restart", "reboot", "shutdown", "network", "wifi",
+    "bluetooth", "mount", "unmount", "permissions", "open", "close",
+    "compress", "extract", "download",
+})
+
+_WORD_BOUNDARY_CACHE: dict[str, re.Pattern] = {}
+
+
+def _word_match(keyword: str, text: str) -> bool:
+    if keyword not in _WORD_BOUNDARY_CACHE:
+        _WORD_BOUNDARY_CACHE[keyword] = re.compile(r"\b" + re.escape(keyword) + r"\b", re.IGNORECASE)
+    return _WORD_BOUNDARY_CACHE[keyword].search(text) is not None
 
 CODE_PATTERNS = [
     re.compile(r"```"),
@@ -66,11 +82,18 @@ def classify(text: str, context: dict | None = None) -> Classification:
     general_score = 0.1
     reasons: list[str] = []
 
-    for kw in CODE_KEYWORDS:
+    for kw in CODE_KEYWORDS_PHRASE:
         if kw in text_lower:
             code_score += 0.3
             reasons.append(f"keyword:{kw}")
             break
+
+    if not reasons:
+        for kw in CODE_KEYWORDS_WORD:
+            if _word_match(kw, text_lower):
+                code_score += 0.3
+                reasons.append(f"keyword:{kw}")
+                break
 
     for pattern in CODE_PATTERNS:
         if pattern.search(text):
@@ -78,11 +101,18 @@ def classify(text: str, context: dict | None = None) -> Classification:
             reasons.append(f"pattern:{pattern.pattern[:30]}")
             break
 
-    for kw in COMMAND_KEYWORDS:
+    for kw in COMMAND_KEYWORDS_PHRASE:
         if kw in text_lower:
             command_score += 0.3
             reasons.append(f"cmd_keyword:{kw}")
             break
+
+    if not any(r.startswith("cmd_keyword:") for r in reasons):
+        for kw in COMMAND_KEYWORDS_WORD:
+            if _word_match(kw, text_lower):
+                command_score += 0.3
+                reasons.append(f"cmd_keyword:{kw}")
+                break
 
     for pattern in COMMAND_PATTERNS:
         if pattern.search(text_lower):
