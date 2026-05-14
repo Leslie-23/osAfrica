@@ -1,0 +1,194 @@
+/* osAfrica GTK4 Dark Theme */
+
+@define-color osa_bg #0a0a0a;
+@define-color osa_bg_secondary #141414;
+@define-color osa_bg_tertiary #1e1e1e;
+@define-color osa_fg #e0e0e0;
+@define-color osa_fg_dim #888888;
+@define-color osa_accent #00cc66;
+@define-color osa_accent_hover #00e676;
+@define-color osa_accent_dim #009944;
+@define-color osa_error #cc3333;
+@define-color osa_warning #cccc00;
+@define-color osa_info #6688cc;
+@define-color osa_border #2a2a2a;
+@define-color osa_selection rgba(0, 204, 102, 0.25);
+
+window {
+    background-color: @osa_bg;
+    color: @osa_fg;
+}
+
+headerbar {
+    background-color: @osa_bg_secondary;
+    border-bottom: 1px solid @osa_border;
+    color: @osa_fg;
+    min-height: 36px;
+}
+
+headerbar title {
+    color: @osa_accent;
+    font-weight: bold;
+}
+
+button {
+    background-color: @osa_bg_tertiary;
+    color: @osa_fg;
+    border: 1px solid @osa_border;
+    border-radius: 6px;
+    padding: 6px 14px;
+    min-height: 28px;
+}
+
+button:hover {
+    background-color: @osa_accent_dim;
+    color: white;
+    border-color: @osa_accent;
+}
+
+button:active {
+    background-color: @osa_accent;
+}
+
+button.suggested-action {
+    background-color: @osa_accent;
+    color: @osa_bg;
+    font-weight: bold;
+}
+
+button.destructive-action {
+    background-color: @osa_error;
+    color: white;
+}
+
+entry, textview {
+    background-color: @osa_bg_secondary;
+    color: @osa_fg;
+    border: 1px solid @osa_border;
+    border-radius: 6px;
+    padding: 6px 10px;
+    caret-color: @osa_accent;
+}
+
+entry:focus, textview:focus-within {
+    border-color: @osa_accent;
+    box-shadow: 0 0 0 1px @osa_accent;
+}
+
+selection {
+    background-color: @osa_selection;
+}
+
+scrollbar trough {
+    background-color: @osa_bg;
+}
+
+scrollbar slider {
+    background-color: @osa_border;
+    border-radius: 4px;
+    min-width: 6px;
+    min-height: 6px;
+}
+
+scrollbar slider:hover {
+    background-color: @osa_fg_dim;
+}
+
+list, listview {
+    background-color: @osa_bg;
+}
+
+list row, listview row {
+    padding: 8px 12px;
+    border-bottom: 1px solid @osa_border;
+}
+
+list row:selected, listview row:selected {
+    background-color: @osa_selection;
+}
+
+tooltip {
+    background-color: @osa_bg_tertiary;
+    color: @osa_fg;
+    border: 1px solid @osa_border;
+    border-radius: 6px;
+    padding: 6px 10px;
+}
+
+popover, popover.menu {
+    background-color: @osa_bg_secondary;
+    border: 1px solid @osa_border;
+    border-radius: 8px;
+}
+
+switch {
+    background-color: @osa_bg_tertiary;
+    border-radius: 12px;
+}
+
+switch:checked {
+    background-color: @osa_accent;
+}
+
+progressbar trough {
+    background-color: @osa_bg_tertiary;
+    border-radius: 3px;
+    min-height: 6px;
+}
+
+progressbar progress {
+    background-color: @osa_accent;
+    border-radius: 3px;
+}
+
+notebook tab {
+    background-color: @osa_bg;
+    color: @osa_fg_dim;
+    padding: 8px 16px;
+    border-bottom: 2px solid transparent;
+}
+
+notebook tab:checked {
+    color: @osa_accent;
+    border-bottom: 2px solid @osa_accent;
+}
+
+/* AI panel specific styles */
+.ai-panel {
+    background-color: rgba(10, 10, 10, 0.95);
+    border: 1px solid @osa_accent_dim;
+    border-radius: 12px;
+}
+
+.ai-input {
+    background-color: @osa_bg_secondary;
+    color: @osa_fg;
+    border: 2px solid @osa_accent_dim;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 16px;
+}
+
+.ai-input:focus {
+    border-color: @osa_accent;
+}
+
+.ai-response {
+    color: @osa_fg;
+    font-family: "Noto Sans Mono", monospace;
+    padding: 12px;
+}
+
+.ai-model-indicator {
+    color: @osa_accent;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.ai-model-indicator.loading {
+    color: @osa_warning;
+}
+
+.ai-model-indicator.error {
+    color: @osa_error;
+}

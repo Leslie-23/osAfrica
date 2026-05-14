@@ -24,6 +24,7 @@ from osa_core.common.permissions import CommandPolicy, CommandVerdict, SafetyLev
 from osa_core.router.classifier import Intent, classify
 from osa_core.router.config import RouterConfig
 from osa_core.router.dispatch import Dispatcher
+from osa_core.shell.history import ShellHistory
 
 SHELL_STYLE = Style.from_dict({
     "prompt": "#00cc66 bold",
@@ -47,6 +48,7 @@ HELP_TEXT = """
   /bash          Toggle bash pass-through mode
   /safety <lvl>  Set safety level: safe, normal, expert
   /model         Show active model info
+  /history       Show query statistics
   /clear         Clear conversation context
   !<command>     Run a bash command directly
 
@@ -54,6 +56,7 @@ HELP_TEXT = """
   list all python files larger than 1MB
   write a script to parse this CSV file
   install nginx and configure it for static files
+  what was the command you just gave me?  (multi-turn context)
   !ls -la
 """
 
@@ -65,8 +68,11 @@ class OsaShell:
         self.dispatcher: Dispatcher | None = None
         self.direct_mode = False
         self.context_id = str(uuid.uuid4())
+        self.conversation: list[dict] = []
+        self.max_context_turns = 10
         self.policy = CommandPolicy(SafetyLevel.NORMAL)
         self.bash_mode = False
+        self.history = ShellHistory()
         self.cwd = Path.cwd()
         history_dir = Path.home() / ".osa"
         history_dir.mkdir(exist_ok=True)
@@ -110,13 +116,22 @@ class OsaShell:
             return True
         if cmd == "/model":
             print("Models: Llama 3 8B (general) + Qwen Coder (code)")
-            print(f"Router: {self.socket_path}")
-            connected = self.client is not None
-            print(f"Status: {'connected' if connected else 'disconnected'}")
+            mode = "direct" if self.direct_mode else f"router ({self.socket_path})"
+            print(f"Mode: {mode}")
+            print(f"Context: {len(self.conversation) // 2} turns")
             return True
         if cmd == "/clear":
             self.context_id = str(uuid.uuid4())
+            self.conversation.clear()
             print("Conversation context cleared.")
+            return True
+        if cmd == "/history":
+            stats = self.history.stats()
+            print(f"Total queries: {stats['total']}")
+            if stats["by_intent"]:
+                print("By intent:", ", ".join(f"{k}={v}" for k, v in stats["by_intent"].items()))
+            if stats["by_model"]:
+                print("By model:", ", ".join(f"{k}={v}" for k, v in stats["by_model"].items()))
             return True
         return False
 
@@ -174,6 +189,7 @@ class OsaShell:
                     text=text,
                     model=classification.model_hint,
                     intent_type=classification.intent.value,
+                    conversation=self.conversation[-self.max_context_turns * 2:],
                 ):
                     print(chunk, end="", flush=True)
                     full_response += chunk
@@ -201,6 +217,17 @@ class OsaShell:
                 print("\n\033[31mConnection to router lost. Reconnecting...\033[0m")
                 self.client = None
                 return
+
+        self.conversation.append({"role": "user", "content": text})
+        self.conversation.append({"role": "assistant", "content": full_response})
+
+        self.history.add(
+            user_input=text,
+            ai_response=full_response[:2000],
+            model_used=model_tag,
+            intent=classification.intent.value,
+            context_id=self.context_id,
+        )
 
         if classification.intent == Intent.COMMAND and full_response.strip():
             command = full_response.strip().strip("`").strip()
@@ -265,6 +292,7 @@ class OsaShell:
             await self.client.close()
         if self.dispatcher:
             await self.dispatcher.close()
+        self.history.close()
 
     @staticmethod
     def _looks_like_bash(text: str) -> bool:

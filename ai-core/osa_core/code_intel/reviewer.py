@@ -5,8 +5,11 @@ from __future__ import annotations
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-from osa_core.common.ipc import IPCClient
+if TYPE_CHECKING:
+    from osa_core.common.ipc import IPCClient
+    from osa_core.router.dispatch import Dispatcher
 
 
 @dataclass
@@ -19,8 +22,16 @@ class ReviewResult:
 
 
 class CodeReviewer:
-    def __init__(self, router_client: IPCClient):
+    def __init__(self, router_client: IPCClient | None = None, dispatcher: Dispatcher | None = None):
         self.router = router_client
+        self.dispatcher = dispatcher
+
+    async def _query(self, prompt: str) -> str:
+        if self.dispatcher:
+            return await self.dispatcher.complete(text=prompt, model="qwen-coder", intent_type="code")
+        if self.router:
+            return await self.router.query(prompt, model_hint="code")
+        raise RuntimeError("No router or dispatcher configured")
 
     async def review_file(self, file_path: str) -> ReviewResult:
         path = Path(file_path)
@@ -40,7 +51,7 @@ class CodeReviewer:
             f"```{lang}\n{content}\n```"
         )
 
-        response = await self.router.query(prompt, model_hint="code")
+        response = await self._query(prompt)
         return self._parse_review(file_path, response)
 
     async def review_diff(self, diff: str = "") -> str:

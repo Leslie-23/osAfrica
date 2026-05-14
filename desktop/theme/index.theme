@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=X-GNOME-Metatheme
+Name=osAfrica
+Comment=AI-Native Linux dark theme
+Encoding=UTF-8
+
+[X-GNOME-Metatheme]
+GtkTheme=osAfrica
+IconTheme=Adwaita
+CursorTheme=Adwaita
+ButtonLayout=appmenu:minimize,maximize,close

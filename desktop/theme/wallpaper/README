@@ -1,0 +1,17 @@
+osAfrica Wallpaper Assets
+=========================
+
+Place wallpaper images here:
+- osafrica-dark.png     — Default dark wallpaper (3840x2160)
+- osafrica-light.png    — Light variant
+- osafrica-minimal.png  — Minimal/logo-only variant
+
+Design guidelines:
+- Primary color: #00cc66 (osAfrica green)
+- Background: #0a0a0a (near-black)
+- Subtle geometric patterns or circuit-board motifs
+- Africa continent silhouette integrated with AI neural network imagery
+- Clean, modern, minimal
+
+Generate with: any image tool, Inkscape SVG → PNG export, or AI image generation
+Target resolution: 3840x2160 (4K), auto-scales down

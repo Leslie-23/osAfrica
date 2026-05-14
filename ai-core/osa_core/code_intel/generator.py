@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
-from osa_core.common.ipc import IPCClient
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from osa_core.common.ipc import IPCClient
+    from osa_core.router.dispatch import Dispatcher
 
 
 TEMPLATE_PROMPTS = {
@@ -40,15 +44,23 @@ TEMPLATE_PROMPTS = {
 
 
 class CodeGenerator:
-    def __init__(self, router_client: IPCClient):
+    def __init__(self, router_client: IPCClient | None = None, dispatcher: Dispatcher | None = None):
         self.router = router_client
+        self.dispatcher = dispatcher
+
+    async def _query(self, prompt: str) -> str:
+        if self.dispatcher:
+            return await self.dispatcher.complete(text=prompt, model="qwen-coder", intent_type="code")
+        if self.router:
+            return await self.router.query(prompt, model_hint="code")
+        raise RuntimeError("No router or dispatcher configured")
 
     async def generate(self, template_name: str, description: str) -> str:
         template = TEMPLATE_PROMPTS.get(template_name)
         if not template:
             return await self._freeform_generate(description)
         prompt = template.format(description=description)
-        return await self.router.query(prompt, model_hint="code")
+        return await self._query(prompt)
 
     async def _freeform_generate(self, description: str) -> str:
         prompt = (
@@ -56,7 +68,7 @@ class CodeGenerator:
             "production-quality, and include only the output — no explanation.\n\n"
             f"Request: {description}"
         )
-        return await self.router.query(prompt, model_hint="code")
+        return await self._query(prompt)
 
     async def list_templates(self) -> dict[str, str]:
         return {name: tmpl.split("\n")[0] for name, tmpl in TEMPLATE_PROMPTS.items()}

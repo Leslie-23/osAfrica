@@ -4,13 +4,24 @@ from __future__ import annotations
 
 import subprocess
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-from osa_core.common.ipc import IPCClient
+if TYPE_CHECKING:
+    from osa_core.common.ipc import IPCClient
+    from osa_core.router.dispatch import Dispatcher
 
 
 class AIDebugger:
-    def __init__(self, router_client: IPCClient):
+    def __init__(self, router_client: IPCClient | None = None, dispatcher: Dispatcher | None = None):
         self.router = router_client
+        self.dispatcher = dispatcher
+
+    async def _query(self, prompt: str) -> str:
+        if self.dispatcher:
+            return await self.dispatcher.complete(text=prompt, model="qwen-coder", intent_type="code")
+        if self.router:
+            return await self._query(prompt)
+        raise RuntimeError("No router or dispatcher configured")
 
     async def diagnose_error(self, error_output: str, source_file: str = "") -> str:
         context = ""
@@ -23,7 +34,7 @@ class AIDebugger:
             "Diagnose this error. Explain the root cause, then provide a specific fix.\n\n"
             f"Error output:\n```\n{error_output}\n```\n{context}"
         )
-        return await self.router.query(prompt, model_hint="code")
+        return await self._query(prompt)
 
     async def analyze_log(self, log_lines: str, context: str = "") -> str:
         prompt = (
@@ -33,7 +44,7 @@ class AIDebugger:
         if context:
             prompt += f"Context: {context}\n\n"
         prompt += f"```\n{log_lines[:6000]}\n```"
-        return await self.router.query(prompt, model_hint="code")
+        return await self._query(prompt)
 
     async def explain_exit_code(self, command: str, exit_code: int, stderr: str = "") -> str:
         prompt = (
@@ -42,7 +53,7 @@ class AIDebugger:
         if stderr:
             prompt += f"stderr:\n```\n{stderr}\n```\n"
         prompt += "Explain what this exit code means and how to fix the issue."
-        return await self.router.query(prompt, model_hint="code")
+        return await self._query(prompt)
 
     async def analyze_service_failure(self, service_name: str) -> str:
         try:
@@ -63,4 +74,4 @@ class AIDebugger:
             f"Recent journal entries:\n```\n{journal.stdout}\n```\n\n"
             "Identify the root cause and provide step-by-step recovery instructions."
         )
-        return await self.router.query(prompt, model_hint="code")
+        return await self._query(prompt)

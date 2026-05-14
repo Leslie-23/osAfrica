@@ -5,24 +5,26 @@
 listen: "127.0.0.1:8080"
 log_level: "info"
 
-# Health check endpoint
 healthcheck:
   endpoint: "/health"
 
-# Model groups — llama-swap manages loading/unloading
 models:
   llama3-8b:
     cmd: >-
       llama-server
-      --model /opt/osa/models/llama-3-8b-instruct.Q4_K_M.gguf
+      --model /opt/osa/models/llama-3-8b-instruct-q4_k_m.gguf
       --host 127.0.0.1
       --port 8081
-      --ctx-size 4096
+      --ctx-size ${OSA_CTX_SIZE:-2048}
       --threads ${OSA_THREADS:-4}
+      --batch-size 512
       --flash-attn
+      --cont-batching
       --chat-template llama3
+      --cache-type-k q4_0
+      --cache-type-v q4_0
     proxy: "http://127.0.0.1:8081"
-    ttl: 0  # never auto-unload (primary model)
+    ttl: 0
     aliases:
       - "llama3"
       - "general"
@@ -30,18 +32,25 @@ models:
   qwen-coder:
     cmd: >-
       llama-server
-      --model /opt/osa/models/qwen-coder.gguf
+      --model /opt/osa/models/qwen2.5-coder-14b-instruct-q4_k_m.gguf
       --host 127.0.0.1
       --port 8082
-      --ctx-size 2048
+      --ctx-size ${OSA_CTX_SIZE:-2048}
       --threads ${OSA_THREADS:-4}
+      --batch-size 512
       --flash-attn
+      --cont-batching
+      --cache-type-k q4_0
+      --cache-type-v q4_0
     proxy: "http://127.0.0.1:8082"
-    ttl: 300  # unload after 5 minutes idle (saves RAM)
+    ttl: 300
     aliases:
       - "qwen"
       - "code"
 
-# On 16GB systems, only one model loaded at a time (swap mode)
-# On 32GB+ systems, both can be loaded concurrently
-# This is handled automatically by llama-swap based on available memory
+# Performance notes:
+# --cache-type-k/v q4_0: quantized KV cache, ~4x less memory per context token
+# --cont-batching: continuous batching for parallel requests
+# --flash-attn: fused attention kernels, faster inference
+# --batch-size 512: prompt processing batch size
+# On 16GB: swap mode (one model at a time). On 32GB+: concurrent.
